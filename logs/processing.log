@@ -1,0 +1,2 @@
+2026-11-09 22:51:11,283 - INFO - [processing] - 65555 lignes analysées, 10 lignes ignorées (format non reconnu)
+2026-11-09 22:51:11,284 - WARNING - [processing] - 10 lignes ne correspondent pas à la regex et sont ignorées
