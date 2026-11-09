@@ -1,112 +1,130 @@
-from collections import Counter, defaultdict
+import re
+
+from logs_config import get_logger
+from processing.geo_location import get_country
 
 
-
-from pathlib import Path
-import sys
-
-# Remonter à la racine du projet
-PROJECT_DIR = Path(__file__).resolve().parents[1]
-if str(PROJECT_DIR) not in sys.path:
-  sys.path.insert(0, str(PROJECT_DIR))
-
-# Ensuite tu importes normalement
-from ingestion.raw import toRows
+logger = get_logger("serving")
 
 
+USER_PATTERN = re.compile(r'(?:for (?:invalid user )?|[Ii]nvalid user )(\S*) from')
 
 
-
-def extract_user_from_message(message: str) -> str:
-  """Extrait le nom d'utilisateur du message de log SSH
-
-  (ex: 'Failed password for root from...' -> 'root')
-  """
-  parts = message.split()
-  try:
-    # Souvent, le nom d'utilisateur se trouve après 'for'
-    if "for" in parts:
-      for_index = parts.index("for")
-      if for_index + 1 < len(parts):
-        # Si c'est 'invalid user', le nom est après 'user'
-        if parts[for_index + 1] == "user" and for_index + 2 < len(parts):
-          return parts[for_index + 2]
-        return parts[for_index + 1]
-  except Exception:
-    pass
-  return "inconnu"
+def extract_user_from_message(message):
+    """Renvoie le nom d'utilisateur du message, ou 'inconnu' s'il est vide."""
+    match = USER_PATTERN.search(message)
+    if match and match.group(1):
+        return match.group(1)
+    return "inconnu"
 
 
-def get_country_from_ip(ip: str) -> str:
-  """Associe une IP à un pays.
+def add_one(counter, key):
 
-  Comme les packages externes (comme requests ou maxminddb) ne sont
-
-  probablement pas autorisés s'ils n'ont pas été vus en cours,
-  on peut utiliser un dictionnaire de test/mapping ou une règle simple.
-  """
-  if not ip:
-    return "Inconnu"
-
-  # Exemple de mapping statique pour les tests du projet
-  # Tu pourras l'adapter ou le lier à une petite table de correspondance si besoin
-  if ip.startswith("192.168.") or ip.startswith("10."):
-    return "Local / Interne"
-  elif ip.startswith("103."):
-    return "Asie (Exemple)"
-  elif ip.startswith("197."):
-    return "Maroc"
-  else:
-    return "Autre"
+    if key in counter:
+        counter[key] = counter[key] + 1
+    else:
+        counter[key] = 1
 
 
-def generate_dashboard_metrics(records: list[dict]) -> dict:
-  """Génère toutes les métriques demandées pour le dashboard."""
+def sort_desc(counter):
+    """Trie un dictionnaire du plus grand nombre au plus petit."""
+    pairs = []
+    for key in counter:
+        pairs.append((counter[key], key))
+    pairs.sort(reverse=True)
 
-  failed_by_country = Counter()
-  success_by_user = Counter()
-  invalid_user_attempts = []
+    result = {}
+    for value, key in pairs:
+        result[key] = value
+    return result
 
-  for r in records:
-    if r["service"] != "sshd":
-      continue
 
-    message = r["message"]
-    ip = r["ip"]
-    user = extract_user_from_message(message)
-    country = get_country_from_ip(ip)
+def generate_dashboard_metrics(records):
+    """Calcule les 3 statistiques du dashboard.
 
-    # 1. Nombre tentatives réussies par user
-    if message.startswith("Accepted"):
-      success_by_user[user] += 1
+    - échec = message sshd qui commence par "Failed password"
+    - échec avec utilisateur invalide = "Failed password for invalid user"
+    - réussite = message sshd qui commence par "Accepted"
+    """
+    failed_by_country = {}
+    success_by_user = {}
+    invalid_user_attempts = []
 
-    # 2. Tentatives échouées (classiques ou invalid user)
-    elif message.startswith("Failed") or message.startswith("Invalid"):
-      failed_by_country[country] += 1
+    for r in records:
+        if r["service"] != "sshd":
+            continue
 
-      # 3. Tentatives échouées avec invalid user
-      if "invalid user" in message.lower():
-        invalid_user_attempts.append({"user": user, "ip": ip, "message": message})
+        message = r["message"]
+        try:
+            if message.startswith("Accepted"):
+                # Statistique 2 : réussites par utilisateur
+                user = extract_user_from_message(message)
+                add_one(success_by_user, user)
 
-  return {
-      "success_by_user": dict(success_by_user.most_common()),
-      "failed_by_country": dict(failed_by_country.most_common()),
-      "invalid_user_count": len(invalid_user_attempts),
-      "invalid_user_details": invalid_user_attempts,
-  }
+            elif message.startswith("Failed password"):
+                # Statistique 1 : échecs par pays
+                country = get_country(r["ip"])
+                add_one(failed_by_country, country)
+
+                # Statistique 3 : échecs avec un utilisateur invalide
+                if message.startswith("Failed password for invalid user"):
+                    user = extract_user_from_message(message)
+                    invalid_user_attempts.append({"user": user, "ip": r["ip"]})
+        except Exception as e:
+            logger.error(f"Erreur sur la ligne {message!r} : {e}")
+
+    logger.info(
+        f"Métriques : {sum(failed_by_country.values())} échecs, "
+        f"{sum(success_by_user.values())} réussites, "
+        f"{len(invalid_user_attempts)} échecs avec utilisateur invalide"
+    )
+    return {
+        "failed_by_country": sort_desc(failed_by_country),
+        "success_by_user": sort_desc(success_by_user),
+        "invalid_user_count": len(invalid_user_attempts),
+        "invalid_user_details": invalid_user_attempts,
+    }
+
+
+def add_top_lines(lines, counter, limit=10):
+    """Ajoute à la liste 'lines' les 'limit' premières lignes d'un dictionnaire."""
+    count = 0
+    for name in counter:
+        lines.append(f"  {name} : {counter[name]}")
+        count = count + 1
+        if count == limit:
+            break
+
+
+def build_dashboard(metrics):
+    """Construit le texte du dashboard à partir des statistiques."""
+    lines = []
+    lines.append("DASHBOARD - ANALYSE DES CONNEXIONS SSH")
+    lines.append("")
+
+    lines.append("1. Tentatives échouées par pays")
+    add_top_lines(lines, metrics["failed_by_country"])
+    lines.append("")
+
+    lines.append("2. Connexions réussies par utilisateur")
+    add_top_lines(lines, metrics["success_by_user"])
+    lines.append("")
+
+    lines.append("3. Tentatives échouées avec un utilisateur invalide")
+    lines.append(f"  Total : {metrics['invalid_user_count']}")
+    names = {}
+    for attempt in metrics["invalid_user_details"]:
+        add_one(names, attempt["user"])
+    lines.append("  Noms invalides les plus essayés :")
+    add_top_lines(lines, sort_desc(names))
+
+    return "\n".join(lines)
 
 
 if __name__ == "__main__":
-  
-  from processing.extract_transforme import extract, summarize
-  from ingestion.raw import toRows
+    from ingestion.raw import toRows
+    from processing.extract_transforme import extract
 
-  # Chargement et traitement depuis l'ingestion et le processing
-  raw_rows = toRows("./log_analysis/data")
-  records = extract(raw_rows)
-  metrics = generate_dashboard_metrics(records)
-
-  print("=== RAPPORT DU DASHBOARD ===")
-  print("Succès par utilisateur :", metrics["success_by_user"])
-  print("Échecs par pays :", metrics["failed_by_country"])
-  print(f"Nombre d'utilisateurs invalides : {metrics['invalid_user_count']}")
+    records = extract(toRows("data"))
+    metrics = generate_dashboard_metrics(records)
+    print(build_dashboard(metrics))

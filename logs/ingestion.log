@@ -8,3 +8,18 @@
 2026-11-09 22:51:09,731 - INFO - [ingestion] - auth.log.3.gz : 18382 lignes lues
 2026-11-09 22:51:09,763 - INFO - [ingestion] - auth.log.4.gz : 14806 lignes lues
 2026-11-09 22:51:09,763 - INFO - [ingestion] - Total : 65565 lignes lues dans data
+2026-11-09 23:41:51,883 - INFO - [ingestion] - auth.log.1 : 14812 lignes lues
+2026-11-09 23:41:51,933 - INFO - [ingestion] - auth.log.2 : 17565 lignes lues
+2026-11-09 23:41:52,018 - INFO - [ingestion] - auth.log.3.gz : 18382 lignes lues
+2026-11-09 23:41:52,093 - INFO - [ingestion] - auth.log.4.gz : 14806 lignes lues
+2026-11-09 23:41:52,093 - INFO - [ingestion] - Total : 65565 lignes lues dans data
+2026-11-09 23:56:46,161 - INFO - [ingestion] - auth.log.1 : 14812 lignes lues
+2026-11-09 23:56:46,180 - INFO - [ingestion] - auth.log.2 : 17565 lignes lues
+2026-11-09 23:56:46,214 - INFO - [ingestion] - auth.log.3.gz : 18382 lignes lues
+2026-11-09 23:56:46,243 - INFO - [ingestion] - auth.log.4.gz : 14806 lignes lues
+2026-11-09 23:56:46,244 - INFO - [ingestion] - Total : 65565 lignes lues dans data
+2026-11-09 23:57:49,251 - INFO - [ingestion] - auth.log.1 : 14812 lignes lues
+2026-11-09 23:57:49,276 - INFO - [ingestion] - auth.log.2 : 17565 lignes lues
+2026-11-09 23:57:49,326 - INFO - [ingestion] - auth.log.3.gz : 18382 lignes lues
+2026-11-09 23:57:49,375 - INFO - [ingestion] - auth.log.4.gz : 14806 lignes lues
+2026-11-09 23:57:49,376 - INFO - [ingestion] - Total : 65565 lignes lues dans data
