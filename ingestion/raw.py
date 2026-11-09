@@ -1,14 +1,10 @@
 import gzip
-import logging
 from pathlib import Path
 
-# Configuration des logs pour enregistrer les erreurs du module d'ingestion
-Path("storage").mkdir(exist_ok=True)
-logging.basicConfig(
-    filename="storage/app_errors.log",
-    level=logging.ERROR,
-    format="%(asctime)s - %(levelname)s - [ingestion] - %(message)s",
-)
+from logs_config import get_logger
+
+# Logger du module d'ingestion : écrit dans logs/ingestion.log et logs/errors.log
+logger = get_logger("ingestion")
 
 
 def toRows(path) -> list[str]:
@@ -24,12 +20,12 @@ def toRows(path) -> list[str]:
   except FileNotFoundError as e:
     error_msg = f"{path} : répertoire introuvable ({e})"
     print(error_msg)
-    logging.error(error_msg)
+    logger.error(error_msg)
     return []
   except Exception as e:
     error_msg = f"Erreur inattendue sur le répertoire {path} : {e}"
     print(error_msg)
-    logging.error(error_msg)
+    logger.error(error_msg)
     return []
 
   for file_path in files:
@@ -39,16 +35,19 @@ def toRows(path) -> list[str]:
     try:
       opener = gzip.open if file_path.suffix == ".gz" else open
       with opener(file_path, mode="rt", errors="replace") as f:
-        rows.extend(f.readlines())
+        lines = f.readlines()
+      rows.extend(lines)
+      logger.info(f"{file_path.name} : {len(lines)} lignes lues")
     except Exception as e:
       error_msg = f"Erreur lors de la lecture du fichier {file_path.name} : {e}"
       print(error_msg)
-      logging.error(error_msg)
+      logger.error(error_msg)
 
+  logger.info(f"Total : {len(rows)} lignes lues dans {path}")
   return rows
 
 
 if __name__ == "__main__":
-  data = toRows("./log_analysis/data")
+  data = toRows("data")
   if data:
     print(data[:10])
