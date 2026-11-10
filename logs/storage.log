@@ -1,0 +1,4 @@
+2026-11-10 09:30:15,220 - INFO - [storage] - failed_by_country.csv : 18 lignes enregistrées
+2026-11-10 09:30:15,224 - INFO - [storage] - success_by_user.csv : 1 lignes enregistrées
+2026-11-10 09:30:15,234 - INFO - [storage] - invalid_users.csv : 3249 lignes enregistrées
+2026-11-10 09:30:15,236 - INFO - [storage] - dashboard.txt enregistré

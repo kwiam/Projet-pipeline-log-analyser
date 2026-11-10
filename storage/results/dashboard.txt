@@ -1,0 +1,30 @@
+DASHBOARD - ANALYSE DES CONNEXIONS SSH
+
+1. Tentatives échouées par pays
+  Inconnu : 4720
+  Romania : 1521
+  The Netherlands : 1305
+  Vietnam : 347
+  Poland : 280
+  Finland : 218
+  Lithuania : 164
+  Chile : 149
+  United Kingdom : 79
+  United States : 67
+
+2. Connexions réussies par utilisateur
+  adminesisa : 1
+
+3. Tentatives échouées avec un utilisateur invalide
+  Total : 3249
+  Noms invalides les plus essayés :
+  admin : 354
+  support : 300
+  esisa : 203
+  ubuntu : 135
+  user : 121
+  test : 82
+  dev : 70
+  solana : 67
+  orangepi : 60
+  ubnt : 40
