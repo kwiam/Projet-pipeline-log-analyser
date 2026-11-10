@@ -2,3 +2,7 @@
 2026-11-10 09:30:15,224 - INFO - [storage] - success_by_user.csv : 1 lignes enregistrées
 2026-11-10 09:30:15,234 - INFO - [storage] - invalid_users.csv : 3249 lignes enregistrées
 2026-11-10 09:30:15,236 - INFO - [storage] - dashboard.txt enregistré
+2026-11-10 10:22:28,215 - INFO - [storage] - failed_by_country.csv : 18 lignes enregistrées
+2026-11-10 10:22:28,217 - INFO - [storage] - success_by_user.csv : 1 lignes enregistrées
+2026-11-10 10:22:28,229 - INFO - [storage] - invalid_users.csv : 3249 lignes enregistrées
+2026-11-10 10:22:28,231 - INFO - [storage] - dashboard.txt enregistré

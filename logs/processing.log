@@ -8,3 +8,5 @@
 2026-11-09 23:57:50,975 - WARNING - [processing] - 10 lignes ne correspondent pas à la regex et sont ignorées
 2026-11-10 09:30:14,477 - INFO - [processing] - 65555 lignes analysées, 10 lignes ignorées (format non reconnu)
 2026-11-10 09:30:14,478 - WARNING - [processing] - 10 lignes ne correspondent pas à la regex et sont ignorées
+2026-11-10 10:22:27,440 - INFO - [processing] - 65555 lignes analysées, 10 lignes ignorées (format non reconnu)
+2026-11-10 10:22:27,500 - WARNING - [processing] - 10 lignes ne correspondent pas à la regex et sont ignorées
